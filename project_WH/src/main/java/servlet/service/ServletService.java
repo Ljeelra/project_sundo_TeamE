@@ -1,5 +1,12 @@
 package servlet.service;
 
+import java.util.List;
+
+import servlet.vo.CityVO;
+
 public interface ServletService {
-	String addStringTest(String str) throws Exception;
+
+	List<CityVO> sidoList();
+
+	List<CityVO> sggList(String sido);
 }

@@ -6,25 +6,16 @@
 <meta charset="UTF-8">
 <title>OpenLayers 테스트</title>
 <!-- jquery -->
-<script src="https://code.jquery.com/jquery-3.7.1.slim.js" integrity="sha256-UgvvN8vBkgO0luPSUl2s8TIlOSYRoGFAX4jlCIm9Adc=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
 <!-- openlayers CDN -->
 <script src="https://cdn.jsdelivr.net/npm/ol@v9.0.0/dist/ol.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.0.0/ol.css">
-
-</head>
-<body>
-	<!-- nav -->
-	
-	<!-- Map -->
-	<div id="map" class="map" style="width: 100%; height: 900px; left: 0px; top: 0px">
-	</div>
-	<!-- select -->
-	<div>
-	
-	</div>
-	<script type="text/javascript">
+<script type="text/javascript">
 	$(function(){	
-	
+		
+		
+		
 		let Base = new ol.layer.Tile({
 			name : "Base",
 			source: new ol.source.XYZ({
@@ -43,6 +34,24 @@
 	        view: olView
 	    });
 		
+		$("#sidoList").on("change", function() {
+			
+			var sdnm = $("#sidoList option:checked").text();//체크된 시도 텍스트값을 가져온다.
+			
+			$.ajax({
+				url: "/testgeool.do", 
+				type: "post", 
+				data: {"sido" : sdnm}, 
+				dataType: 'json', 
+				success:function(){
+					alert('아무튼 정상!');
+				}, 
+				error:function(request,status,error){
+					alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+				}
+			})
+			
+		});
 		
 		let sd = new ol.layer.Tile({
 			name: "sd",
@@ -94,5 +103,27 @@
 	    map.addLayer(bjd);
 	});
 </script>
+</head>
+<body>
+	<!-- nav -->
+	
+	<!-- Map -->
+	<div id="map" class="map" style="width: 100%; height: 900px; left: 0px; top: 0px">
+	</div>
+	<!-- select -->
+	<div id="selectlayer">
+
+			<select id="sidoList" name="sido">
+				<option selected disabled hidden>--시/도를 선택해주세요--</option>
+				<c:forEach items="${sidoList }" var="sido">
+					<option class="sd" value="${sido.sd_cd}">${sido.sd_nm}</option>
+				</c:forEach>
+			</select>
+			<select id="sigungu" name="sigungu">
+				<option></option>
+			</select>
+
+			<button class="selectBtn" name="selectBtn" type="button">선택</button>
+	</div>
 </body>
 </html>

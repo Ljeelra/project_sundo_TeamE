@@ -12,4 +12,12 @@
 				1=1
 		]]>
 	</select>
+	
+	<select id="sidoList" resultType="cityVO">
+		SELECT distinct sd_nm FROM tl_sd
+	</select>
+	
+	<select id="sggList" resultType="cityVO" parameterType="String">
+		SELECT distinct sgg_nm, sgg_cd FROM tl_sgg WHERE sd_nm = #{sido}
+	</select>
 </mapper>
