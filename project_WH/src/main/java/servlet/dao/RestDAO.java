@@ -9,14 +9,14 @@ import org.springframework.stereotype.Repository;
 import servlet.impl.EgovComAbstractDAO;
 import servlet.vo.CityVO;
 
-@Repository("ServletDAO")
-public class ServletDAO extends EgovComAbstractDAO {
-	
+@Repository("RestDAO")
+public class RestDAO extends EgovComAbstractDAO {
+
 	@Autowired
 	private SqlSession session;
-	
-	public List<CityVO> sidoList() {
-		return session.selectList("servlet.sidoList");
-	}
 
+	public List<CityVO> sggList(String sido) {
+		return session.selectList("Rest.sggList", sido);
+	}
+	
 }

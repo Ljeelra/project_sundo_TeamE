@@ -8,5 +8,4 @@ public interface ServletService {
 
 	List<CityVO> sidoList();
 
-	List<CityVO> sggList(String sido);
 }

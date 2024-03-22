@@ -6,9 +6,7 @@ import javax.annotation.Resource;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import servlet.service.ServletService;
 import servlet.vo.CityVO;
@@ -18,7 +16,7 @@ public class ServletController {
 	@Resource(name = "ServletService")
 	private ServletService servletService;
 
-	@RequestMapping(value = "/main.do")
+	@RequestMapping(value={"/main.do", "/"})
 	public String mainTest() throws Exception {
 		System.out.println("sevController.java - mainTest()");
 

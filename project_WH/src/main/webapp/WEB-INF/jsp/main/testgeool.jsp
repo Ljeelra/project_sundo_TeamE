@@ -43,11 +43,14 @@
 				type: "post", 
 				data: {"sido" : sdnm}, 
 				dataType: 'json', 
-				success:function(){
-					alert('아무튼 정상!');
+				success:function(data){
+					alert(data);
 				}, 
 				error:function(request,status,error){
-					alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+					
+					console.log("code: " + request.status);
+			        console.log("message: " + request.responseText);
+			        console.log("error: " + error);
 				}
 			})
 			

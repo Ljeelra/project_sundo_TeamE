@@ -22,8 +22,4 @@ public class ServletImpl extends EgovAbstractServiceImpl implements ServletServi
 		return dao.sidoList();
 	}
 
-	@Override
-	public List<CityVO> sggList(String sido) {
-		return dao.sggList(sido);
-	}
 }
