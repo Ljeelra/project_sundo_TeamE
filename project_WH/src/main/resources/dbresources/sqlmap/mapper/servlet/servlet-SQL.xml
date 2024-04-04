@@ -2,22 +2,20 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="servlet">
 
-	<select id="serVletTest" resultType="EgovMap">
-		<![CDATA[
-			SELECT 
-				FILENAME, FILEREALNAME
-			FROM
-				UPLOAD
-			WHERE
-				1=1
-		]]>
-	</select>
-	
 	<select id="sidoList" resultType="cityVO">
-		SELECT distinct sd_nm FROM tl_sd
+		SELECT distinct sd_nm, sd_cd FROM tl_sd
 	</select>
 	
 	<select id="sggList" resultType="cityVO" parameterType="String">
 		SELECT distinct sgg_nm, sgg_cd FROM tl_sgg WHERE sd_nm = #{sido}
 	</select>
+	
+	<select id="sdView"  resultType="cityVO" parameterType="String">
+		select ST_AsGeoJSON(ST_EXTENT(geom), 9, 1) as geom from tl_sd where sd_nm = #{sido}
+	</select>
+	
+	<select id="sggView"  resultType="cityVO" parameterType="String">
+		select ST_AsGeoJSON(ST_EXTENT(geom), 9, 1) as geom from tl_sgg where sgg_cd = #{sgg_cd}
+	</select>
+	
 </mapper>

@@ -21,5 +21,21 @@ public class ServletImpl extends EgovAbstractServiceImpl implements ServletServi
 	public List<CityVO> sidoList() {
 		return dao.sidoList();
 	}
+	
+	@Override
+	public List<CityVO> sggList(String sido) {
+		return dao.sggList(sido);
+	}
+
+	@Override
+	public CityVO sdView(String sido) {
+		return dao.sdView(sido);
+	}
+	
+	@Override
+	public CityVO sggView(String sgg_cd) {
+		return dao.sggView(sgg_cd);
+	}
+
 
 }

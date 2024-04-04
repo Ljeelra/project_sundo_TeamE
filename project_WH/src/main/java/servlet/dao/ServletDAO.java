@@ -19,4 +19,16 @@ public class ServletDAO extends EgovComAbstractDAO {
 		return session.selectList("servlet.sidoList");
 	}
 
+	public List<CityVO> sggList(String sido) {
+		return session.selectList("servlet.sggList", sido);
+	}
+
+	public CityVO sdView(String sido) {
+		return session.selectOne("servlet.sdView", sido);
+	}
+	
+	public CityVO sggView(String sgg_cd) {
+		return session.selectOne("servlet.sggView", sgg_cd);
+	}
+
 }

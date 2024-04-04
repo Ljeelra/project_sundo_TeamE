@@ -7,5 +7,10 @@ import lombok.Data;
 @Alias("cityVO")
 @Data
 public class CityVO {
-	private String sd_cd, sgg_cd, bjd_cd, sd_nm, sgg_nm, bjd_nm;
+	//시도
+	private String geom, ufid, sd_cd, sd_nm, divi;
+	//시군구
+	private String geometry, adm_sect_c, sgg_nm, sgg_oid, col_adm_se, gid, sgg_cd;
+
+	private String xmax, ymax, xmin, ymin;
 }

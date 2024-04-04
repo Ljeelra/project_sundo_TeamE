@@ -5,7 +5,8 @@ import java.util.List;
 import javax.annotation.Resource;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import servlet.service.ServletService;
@@ -16,28 +17,31 @@ public class ServletController {
 	@Resource(name = "ServletService")
 	private ServletService servletService;
 
-	@RequestMapping(value={"/main.do", "/"})
-	public String mainTest() throws Exception {
-		System.out.println("sevController.java - mainTest()");
-
-		return "main/main";
-	}
-
-	@RequestMapping(value = "/test")
-	public String test() {
-		return "main/test";
-	}
-
-	@RequestMapping(value = "/testgeool.do")
-	public String testgeool(ModelMap model) {
+	@GetMapping(value={"/main.do", "/"})
+	public String main(Model model) {
 		List<CityVO> sidoList = servletService.sidoList();
-		model.addAttribute("sidoList", sidoList);
-		
-//		List<CityVO> sggList = servletService.sggList(sido);
-//		model.addAttribute("sggList", sggList);
-		
-//		List<CityVO> bjdList = servletService.bjdList(sgg);
-//		model.addAttribute("bjdList", bjdList);
+		model.addAttribute("sidoList", sidoList);		
+
+		return "main/redirect";
+	}
+	
+	@RequestMapping("/")
+	public String firstMain(Model model) {
+		List<CityVO> sidoList = servletService.sidoList();
+		model.addAttribute("sidoList", sidoList);	
+		return "recdirect:/main.do";
+	}
+	
+	@GetMapping("fileUpload.do")
+	public String uploadPage() {
+		return "main/fileUpload";
+	}
+	
+	@GetMapping("/testgeool.do")
+	public String test(Model model) {
+		List<CityVO> sidoList = servletService.sidoList();
+		model.addAttribute("sidoList", sidoList);		
+
 		return "main/testgeool";
 	}
 	
