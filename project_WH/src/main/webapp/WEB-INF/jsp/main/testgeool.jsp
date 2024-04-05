@@ -11,6 +11,7 @@
 <!-- openlayers CDN -->
 <script src="https://cdn.jsdelivr.net/npm/ol@v9.0.0/dist/ol.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.0.0/ol.css">
+
 <script type="text/javascript">
 	$(function(){
 		let sd, sgg, bjd, legend, style;
@@ -258,7 +259,82 @@
 			
 		});
 		
+		map.on('singleclick', async (evt) => {
+			
+			let container = document.createElement('div');
+		    container.setAttribute("class", "ol-popup-custom");
+		    
+		    let content = document.createElement('div');
+		    content.setAttribute("class", "popup-content");
+		    //content.classList.add('popup-content');
+		    
+		    container.appendChild(content);
+		    document.body.appendChild(container);
+		    
+		    var coordinate = evt.coordinate; // 클릭한 지도 좌표
 
+		    
+			console.log(map.getLayers().getArray());
+			
+			const wmsLayer = map.getLayers().getArray().filter(layer => 
+			{
+		        return layer.get("name") === 'sd';
+		    })[0];
+			
+			console.log(wmsLayer);
+			
+			const source = wmsLayer.getSource();
+			
+			console.log(source);
+				
+			const url = source.getFeatureInfoUrl(coordinate, map.getView().getResolution() || 0, 'EPSG:3857', {
+				QUERY_LAYERS: 'projectsd:e4sdview',
+				INFO_FORMAT: 'application/json'
+			});
+			
+			console.log(url);
+				
+			// GetFeatureInfo URL이 유효할 경우
+			 if (url) {
+			    try {
+			        const request = await fetch(url.toString(), { method: 'GET' });
+			
+			        if (request.ok) {
+			            const json = await request.json();
+			
+			            if (json.features.length === 0) {
+			                overlay.setPosition(undefined);
+			            } else {
+			                const feature = new ol.format.GeoJSON().readFeature(json.features[0]);
+			                const vector = new ol.source.Vector({ features: [feature] });
+			                //여기서 ajax가능한가?
+			                content.innerHTML = '<a id="popup-closer" class="ol-popup-closer"></a><div class="info">' + feature.get('sd_nm') + '</div>';
+			
+			                let overlay = new ol.Overlay({
+			                    element: container,
+			                });
+			
+			                map.addOverlay(overlay);
+			                overlay.setPosition(coordinate);
+			
+			                let oElem = overlay.getElement();
+			                oElem.addEventListener('click', function(e) {
+			                    let target = e.target;
+			                    if (target.className == "ol-popup-closer") {
+			                        //선택한 OverLayer 삭제
+			                        map.removeOverlay(overlay);
+			                    }
+			                });
+			            }
+			        } else {
+			            console.log(request.status);
+			        }
+			    } catch (error) {
+			        console.log(error.message);
+			    }
+			}
+				
+		});
 		
 	});
 </script>
@@ -322,7 +398,7 @@
 				<option></option>
 			</select>
 			<select id="legend">
-               <option selected disabled hidden>범례 선택</option>
+               <option selected disabled hidden>--범례 선택--</option>
                <option value="1">등간격</option>
                <option value="2">등분위</option>
                <option value="3">Natural Breaks</option>

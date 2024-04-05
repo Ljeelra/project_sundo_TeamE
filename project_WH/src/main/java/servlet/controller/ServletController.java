@@ -17,19 +17,12 @@ public class ServletController {
 	@Resource(name = "ServletService")
 	private ServletService servletService;
 
-	@GetMapping(value={"/main.do", "/"})
+	@GetMapping("/main.do")
 	public String main(Model model) {
 		List<CityVO> sidoList = servletService.sidoList();
 		model.addAttribute("sidoList", sidoList);		
 
-		return "main/redirect";
-	}
-	
-	@RequestMapping("/")
-	public String firstMain(Model model) {
-		List<CityVO> sidoList = servletService.sidoList();
-		model.addAttribute("sidoList", sidoList);	
-		return "recdirect:/main.do";
+		return "main/main";
 	}
 	
 	@GetMapping("fileUpload.do")
