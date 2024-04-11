@@ -12,9 +12,12 @@
 <script src="https://cdn.jsdelivr.net/npm/ol@v9.0.0/dist/ol.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.0.0/ol.css">
 
+<!-- SweetAlert2 -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> -->
+
 <script type="text/javascript">
 	$(function(){
-		let sd, sgg, bjd, legend, style;
+		let sd, sgg, bjd, legend, style, overlay;
 		
 		let Base = new ol.layer.Tile({
 			name : "Base",
@@ -68,8 +71,8 @@
 							url : 'http://localhost/geoserver/projectsd/wms?service=WMS',
 							params: {
 								'VERSION' : '1.1.0',
-								'LAYERS' : 'projectsd:e4sdview',
-								'BBOX' : [1.3871489341071218E7,3910407.083927817,1.4680011171788167E7,4666488.829376997],
+								'LAYERS' : 'projectsd:e4sggview',
+								'BBOX' : [1.3867446E7,3906626.5,1.4684053E7,4670269.5],
 								'SRS' : 'EPSG:3857',
 								'FORMAT' : 'image/png',
 								'CQL_FILTER' : sd_CQL
@@ -80,6 +83,7 @@
 					});
 					
 					map.addLayer(sd);
+				    console.log(sd);
 				}, 
 				error:function(request,status,error){					
 					console.log("code: " + request.status);
@@ -126,6 +130,7 @@
 					});
 					
 				    map.addLayer(bjd);
+				    console.log(bjd);
 				}, 
 				error:function(request,status,error){					
 					console.log("code: " + request.status);
@@ -155,24 +160,23 @@
 					style = 'ELbjdview';
 					break;
 				case '2' :
-					style = 'QUbjdview';
+					style = 'NBbjdview';
 					break;
 				default : 
-					style = 'NBbjdview';
+					console.log(legend);
 				}
 			} else if(sgg_CQL === 'sgg_cd=시군구 선택' && legend != null){
 				switch(legend){
 				case '1' :
 					console.log(legend);
-					style='ELsdview';
+					style='ELsggview';
 					break;
 				case '2' :
 					console.log(legend);
-					style='QUsdview';
+					style='NBsggview';
 					break;
 				default :
 					console.log(legend);
-					style='NBsdview';
 				}
 			}
 			
@@ -186,8 +190,8 @@
 						url : 'http://localhost/geoserver/projectsd/wms?service=WMS',
 						params: {
 							'VERSION' : '1.1.0',
-							'LAYERS' : 'projectsd:e4sdview',
-							'BBOX' : [1.3871489341071218E7,3910407.083927817,1.4680011171788167E7,4666488.829376997],
+							'LAYERS' : 'projectsd:e4sggview',
+							'BBOX' : [1.3867446E7,3906626.5,1.4684053E7,4670269.5],
 							'SRS' : 'EPSG:3857',
 							'FORMAT' : 'image/png',
 							'CQL_FILTER' : sd_CQL,
@@ -198,7 +202,7 @@
 					opacity : 0.5
 				});
 				
-				bjd = new ol.layer.Tile({
+/* 				bjd = new ol.layer.Tile({
 					name: "bjd",
 					source : new ol.source.TileWMS({
 						url : 'http://localhost/geoserver/projectsd/wms?service=WMS',
@@ -213,7 +217,7 @@
 						serverType : 'geoserver'
 					}),
 					opacity : 0.8
-				});
+				}); */
 				
 				map.addLayer(sd);
 				
@@ -224,8 +228,8 @@
 						url : 'http://localhost/geoserver/projectsd/wms?service=WMS',
 						params: {
 							'VERSION' : '1.1.0',
-							'LAYERS' : 'projectsd:e4sdview',
-							'BBOX' : [1.3871489341071218E7,3910407.083927817,1.4680011171788167E7,4666488.829376997],
+							'LAYERS' : 'projectsd:e4sggview',
+							'BBOX' : [1.3867446E7,3906626.5,1.4684053E7,4670269.5],
 							'SRS' : 'EPSG:3857',
 							'FORMAT' : 'image/png',
 							'CQL_FILTER' : sd_CQL
@@ -261,120 +265,123 @@
 		
 		map.on('singleclick', async (evt) => {
 			
-			let container = document.createElement('div');
-		    container.setAttribute("class", "ol-popup-custom");
-		    
-		    let content = document.createElement('div');
-		    content.setAttribute("class", "popup-content");
-		    //content.classList.add('popup-content');
-		    
-		    container.appendChild(content);
-		    document.body.appendChild(container);
-		    
-		    var coordinate = evt.coordinate; // 클릭한 지도 좌표
-
-		    
-			console.log(map.getLayers().getArray());
-			
-			const wmsLayer = map.getLayers().getArray().filter(layer => 
-			{
-		        return layer.get("name") === 'sd';
-		    })[0];
-			
-			console.log(wmsLayer);
-			
-			const source = wmsLayer.getSource();
-			
-			console.log(source);
+		    if(sd == null){
+		    	alert('시도를 선택해주세요!');
+		    	return false;
+		    } else{
+		    	map.removeOverlay(overlay);
+		    	
+				let container = document.createElement('div');
+				container.setAttribute("class", "ol-popup-custom");
+			    let content = document.createElement('div');
+			    content.setAttribute("class", "popup-content");
+			    
+			    container.appendChild(content);
+			    document.body.appendChild(container);	
+	    
+			    let coordinate = evt.coordinate; // 클릭한 지도 좌표
+	
+			    console.log(map.getLayers().getArray());
 				
-			const url = source.getFeatureInfoUrl(coordinate, map.getView().getResolution() || 0, 'EPSG:3857', {
-				QUERY_LAYERS: 'projectsd:e4sdview',
-				INFO_FORMAT: 'application/json'
-			});
-			
-			console.log(url);
-				
-			// GetFeatureInfo URL이 유효할 경우
-			 if (url) {
-			    try {
-			        const request = await fetch(url.toString(), { method: 'GET' });
-			
-			        if (request.ok) {
-			            const json = await request.json();
-			
-			            if (json.features.length === 0) {
-			                overlay.setPosition(undefined);
-			            } else {
-			                const feature = new ol.format.GeoJSON().readFeature(json.features[0]);
-			                const vector = new ol.source.Vector({ features: [feature] });
-			                //여기서 ajax가능한가?
-			                content.innerHTML = '<a id="popup-closer" class="ol-popup-closer"></a><div class="info">' + feature.get('sd_nm') + '</div>';
-			
-			                let overlay = new ol.Overlay({
-			                    element: container,
-			                });
-			
-			                map.addOverlay(overlay);
-			                overlay.setPosition(coordinate);
-			
-			                let oElem = overlay.getElement();
-			                oElem.addEventListener('click', function(e) {
-			                    let target = e.target;
-			                    if (target.className == "ol-popup-closer") {
-			                        //선택한 OverLayer 삭제
-			                        map.removeOverlay(overlay);
-			                    }
-			                });
-			            }
-			        } else {
-			            console.log(request.status);
-			        }
-			    } catch (error) {
-			        console.log(error.message);
+			    let wmsLayer;
+			    if(bjd != null){
+					wmsLayer = map.getLayers().getArray().filter(layer => {
+				        return layer.get("name") === 'bjd';
+				    })[0];   	
+			    } else{
+					wmsLayer = map.getLayers().getArray().filter(layer => {
+				        return layer.get("name") === 'sd';
+				    })[0];			  
 			    }
-			}
+	
+			    console.log(wmsLayer);
+	
+			    const source = wmsLayer.getSource();
+			    console.log(source);
+			    const param = source.getParams();
+			    
 				
+			    const layer = param['LAYERS'];
+			    console.log(layer);
+			    
+			    const url = source.getFeatureInfoUrl(coordinate, map.getView().getResolution() || 0, 'EPSG:3857', {
+			        QUERY_LAYERS: layer,
+			        INFO_FORMAT: 'application/json'
+			    });
+	
+			    console.log(url);
+	
+			    // GetFeatureInfo URL이 유효할 경우
+			    if (url) {
+			        try {
+			            const request = await fetch(url.toString(), { method: 'GET' });
+	
+			            if (request.ok) {
+			                const json = await request.json();
+	
+			                if (json.features.length === 0) {
+			                    overlay.setPosition(undefined);
+			                } else {
+			                    const feature = new ol.format.GeoJSON().readFeature(json.features[0]);
+			                    const vector = new ol.source.Vector({ features: [feature] });
+			                  
+			                    let totalUsage;
+			                    let locNm;
+			                    if(layer=='projectsd:e4sdview'){
+									totalUsage = feature.get('usage');
+									locNm =feature.get('sd_nm');
+			                   	} else{
+									totalUsage = feature.get('usage');
+									locNm =feature.get('bjd_nm');
+			                   	}
+
+								
+								console.log(totalUsage);
+								console.log(locNm);
+								
+			                    content.innerHTML = '<div class="info"><p>'+ locNm +'</p>' + totalUsage + ' kwh' +
+		    					'</div>';
+	
+			                    overlay = new ol.Overlay({
+			                        element: content			                        
+			                    });
+	
+			                    map.addOverlay(overlay);
+			                    overlay.setPosition(coordinate);
+			                }
+			            } else {
+			                console.log(request.status);
+			            }
+			        } catch (error) {
+			            console.log(error.message);
+			        }
+			    }
+	
+			}
 		});
 		
 	});
 </script>
 <style type="text/css">
-.ol-popup-custom {
-    padding: 0;
-    margin: 0;
-    pointer-events: none;
-    position: absolute;
-    background-color: white;
-    filter: drop-shadow(3px 3px 7px rgba(0,0,0,0.6));
-    border: 1px solid black;
-    min-width: 120px;
-    width: auto;
-    left: -60px; /* 위치를 조정, -width의 절반값 */
-    min-height: 48px;
-    height: auto;
-    bottom: -50%; /* 위치를 조정, -height의 절반값 */
-    box-sizing: border-box;
-    text-align: center;
-    overflow: hidden;
-}
-.popup-content {
-	display : block;
-   	position: absolute;
-   	width: 100%;
-   	box-sizing: border-box;
-   	line-height: 100%;
-}
-.info {
-    display: inline-block;
-    line-height: 100%;
-    width: 100%;
-   	height:auto;
-    font-size:10px;
-    font-weight: bold;
-    box-sizing: border-box;
-    justify-content: center;
-}
 
+	.info{
+		margin-bottom: 1px;
+		background-color: white;
+		display: inline-block;
+		justify-content: center;
+		border : solid 1px black;
+		line-height: 100%;
+    	width: 100%;
+    	height: auto;
+    	box-sizing: border-box;
+    	text-align: center;
+    	border-radius: 10%;
+    	font-size:12px;
+	}
+	.info > p{
+		margin: 3px;
+		font-weight: bold;
+	}
 </style>
 </head>
 <body>
@@ -384,7 +391,7 @@
 	<!-- Map -->
 	<div id="map" class="map" style="width: 100%; height: 900px; left: 0px; top: 0px">
 	</div>
-	<div id="map-popup"></div>
+	<!-- <div id="map-popup"></div> -->
 	<!-- select -->
 	<div id="selectlayer">
 
@@ -400,8 +407,7 @@
 			<select id="legend">
                <option selected disabled hidden>--범례 선택--</option>
                <option value="1">등간격</option>
-               <option value="2">등분위</option>
-               <option value="3">Natural Breaks</option>
+               <option value="2">Natural Breaks</option>
             </select>
 
 			<button class="selectBtn" name="selectBtn" type="button">선택</button>

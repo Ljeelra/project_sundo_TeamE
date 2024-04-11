@@ -1,254 +1,131 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>OpenLayers 테스트</title>
-<!-- jquery -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-<!-- openlayers CDN -->
-<script src="https://cdn.jsdelivr.net/npm/ol@v9.0.0/dist/ol.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v9.0.0/ol.css">
-<script type="text/javascript">
-	$(function(){
-		let sd, sgg, bjd, legend, style;
-		
-		let Base = new ol.layer.Tile({
-			name : "Base",
-			source: new ol.source.XYZ({
-				url: 'https://api.vworld.kr/req/wmts/1.0.0/3BEFB2E1-C715-3AE1-BEAB-729D5FF229AD/Base/{z}/{y}/{x}.png'
-			})
-		}); // WMTS API 사용
-		
-	    let olView = new ol.View({
-	        center: ol.proj.transform([127.100616,37.402142], 'EPSG:4326', 'EPSG:3857'),//좌표계 변환
-	        zoom: 6,
-	        minZoom: 7,
-	        maxZoom: 19
-	    })// 뷰 설정
-	    
-	    let map = new ol.Map({
-	        layers: [Base],
-	        target: 'map',
-	        view: olView
-	    });
-		
-		$('#sidoList').on("change", function() {
-			
-			let sdnm = $("#sidoList option:checked").text();//체크된 시도 텍스트값을 가져온다.
-			
-			$.ajax({
-				url: "/main.do", 
-				type: "post", 
-				data: {"sido" : sdnm}, 
-				dataType: 'json', 
-				success:function(result){
-					//console.log(result);
-					let geomObject = JSON.parse(result[result.length-1].geom);
-					let bbox = geomObject.bbox;
-					//console.log(bbox);
-					map.getView().fit(bbox, {duation : 900});
-					
-					$('#sigungu').empty();
-					let sggval = "<option>시군구 선택</option>";
-					for(let i=0;i<result.length;i++){
-						sggval += "<option value="+result[i].sgg_cd+">"+result[i].sgg_nm+"</option>"
-					}
-					$("#sigungu").append(sggval);
-				}, 
-				error:function(request,status,error){					
-					console.log("code: " + request.status);
-			        console.log("message: " + request.responseText);
-			        console.log("error: " + error);
-				}
-			})
-			
-		});
-		
- 		$('#sigungu').on("change", function(){
-			let sgg_cd = $('#sigungu option:checked').val();
-			
-			$.ajax({
-				url: "/sggSelect.do", 
-				type: "post", 
-				data: {"sgg_cd" : sgg_cd}, 
-				dataType: 'json', 
-				success:function(result){
-					//console.log(result);
-					let geomObject = JSON.parse(result.geom);
-					let bbox = geomObject.bbox;
-					//console.log(bbox);
-					map.getView().fit(bbox, {duation : 900});
-				}, 
-				error:function(request,status,error){					
-					console.log("code: " + request.status);
-			        console.log("message: " + request.responseText);
-			        console.log("error: " + error);
-				}
-			})
-		});
- 		
- 		$('#legend').on("change", function(){
- 			legend = $('#legend').val();
- 			console.log(legend);
- 		});
- 			
-		$('.selectBtn').click(function(){
-			map.removeLayer(sd);
-			map.removeLayer(bjd);
-			
-			let sd_CQL="sd_cd="+$('#sidoList').val();
-			let sgg_CQL="sgg_cd="+$('#sigungu').val();
-			console.log(sgg_CQL);
-			
-			if(sgg_CQL != '시군구 선택' && legend != null){
-				switch(legend){
-				case 1 :
-					style = 'ELbjdview';
-					break;
-				case 2 :
-					style = 'QUbjdbiew';
-					break;
-				default : 
-					style = 'NBbjdview';
-				}
-			} else if(legend != null){
-				switch(legend){
-				case 1 :
-					style = 'ELsdview';
-					break;
-				case 2 :
-					style = 'QUsdbiew';
-					break;
-				default : 
-					style = 'NBsdview';
-				}
-			}
-			
-			console.log(style);
-			//if문 작성
-			//시도만, 시도+범례, 시도+시군구+범례X, 시도+시군구+범례O
-			//시도선택만 했을 경우, 범례X => legend==null, sgg_CQL=='시군구 선택'
-			//시도+범례 => legend != null, sgg_CQL =='시군구 선택'
-			//시도+시군구+범례x => legend == null, sgg_CQL !='시군구 선택'
-			//시도+시군구+범례O => legend != null, sgg_CQL !='시군구 선택'
-			//--> 범례 선택하지 않는 경우는 그냥 on change 쪽으로 넘겨도 될것 같은데..
-			if(sgg_CQL=='시군구 선택' && legend != null){
-				sd = new ol.layer.Tile({
-					name: "sd",
-					source : new ol.source.TileWMS({
-						url : 'http://localhost/geoserver/projectsd/wms?service=WMS',
-						params: {
-							'VERSION' : '1.1.0',
-							'LAYERS' : 'projectsd:e4sdview',
-							'BBOX' : [1.3871489341071218E7,3910407.083927817,1.4680011171788167E7,4666488.829376997],
-							'SRS' : 'EPSG:3857',
-							'FORMAT' : 'image/png',
-							'CQL_FILTER' : sd_CQL,
-							'STYLE' : style
-						},
-						serverType : 'geoserver'
-					}),
-					opacity : 0.5
-				});
-				
-				bjd = new ol.layer.Tile({
-					name: "bjd",
-					source : new ol.source.TileWMS({
-						url : 'http://localhost/geoserver/projectsd/wms?service=WMS',
-						params: {
-							'VERSION' : '1.1.0',
-							'LAYERS' : 'projectsd:e4bjdview',
-							'BBOX' : [1.3873946E7,3906626.5,1.4428045E7,4670269.5],
-							'SRS' : 'EPSG:3857',
-							'FORMAT' : 'image/png',
-							'CQL_FILTER' : sgg_CQL
-						},
-						serverType : 'geoserver'
-					}),
-					opacity : 0.8
-				});
-				
-			} else{//법정동 sgg_CQL값이 시군구 선택이 아니고 범례 값이 null이 아닐때
-				sd = new ol.layer.Tile({
-					name: "sd",
-					source : new ol.source.TileWMS({
-						url : 'http://localhost/geoserver/projectsd/wms?service=WMS',
-						params: {
-							'VERSION' : '1.1.0',
-							'LAYERS' : 'projectsd:e4sdview',
-							'BBOX' : [1.3871489341071218E7,3910407.083927817,1.4680011171788167E7,4666488.829376997],
-							'SRS' : 'EPSG:3857',
-							'FORMAT' : 'image/png',
-							'CQL_FILTER' : sd_CQL
-						},
-						serverType : 'geoserver'
-					}),
-					opacity : 0.5
-				});					
-			
-				bjd = new ol.layer.Tile({
-					name: "bjd",
-					source : new ol.source.TileWMS({
-						url : 'http://localhost/geoserver/projectsd/wms?service=WMS',
-						params: {
-							'VERSION' : '1.1.0',
-							'LAYERS' : 'projectsd:e4bjdview',
-							'BBOX' : [1.3873946E7,3906626.5,1.4428045E7,4670269.5],
-							'SRS' : 'EPSG:3857',
-							'FORMAT' : 'image/png',
-							'CQL_FILTER' : sgg_CQL,
-							'STYLES' : style
-						},
-						serverType : 'geoserver'
-					}),
-					opacity : 0.8
-				});
-			} //else{}범례 선택 없이 버튼 누를 때 추가
-			
-		    map.addLayer(sd);
-		    //map.addLayer(sgg);
-		    map.addLayer(bjd);
-		});
-		
-	});
-	
-
-</script>
-</head>
-<body>
-<h1>탄소 지도 정보시스템</h1>
-	<!-- nav -->
-	<a href="/fileUpload.do">파일업로드</a>
-	<!-- Map -->
-	<div id="map" class="map" style="width: 100%; height: 900px; left: 0px; top: 0px">
-	</div>
-	<!-- select -->
-	<div id="selectlayer">
-			<select id="sidoList" name="sido">
-				<option selected disabled hidden>--시/도를 선택해주세요--</option>
-				<c:forEach items="${sidoList }" var="sido">
-					<option class="sd" value="${sido.sd_cd}">${sido.sd_nm}</option>
-				</c:forEach>
-			</select>
-			<select id="sigungu" name="sigungu">
-				<option></option>
-			</select>
-			<select id="legend">
-               <option selected disabled hidden>범례 선택</option>
-               <option value="1">등간격</option>
-               <option value="2">등분위</option>
-               <option value="3">Natural Breaks</option>
-            </select>
-
-			<button class="selectBtn" name="selectBtn" type="button">선택</button>
-	</div>
-
-<!-- 	<div class="barModal">
-		<progress id="progressBar" value="0" max="100" ></progress>
-	</div> -->
-	
-</body>
+<html lang="ko">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>Sidenav Light - SB Admin</title>
+        <link href="/resources/css/styles.css" rel="stylesheet" />
+        <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+    </head>
+    <body class="sb-nav-fixed">
+        <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
+            <!-- Navbar Brand-->
+            <a class="navbar-brand ps-3" href="/main.do">탄소배출공간지도시스템</a>
+            <!-- Sidebar Toggle-->
+            <!-- Navbar-->
+ 
+        </nav>
+        <div id="layoutSidenav">
+            <div id="layoutSidenav_nav">
+                <nav class="sb-sidenav accordion sb-sidenav-light" id="sidenavAccordion">
+                    <div class="sb-sidenav-menu">
+                        <div class="nav">
+                            <div class="sb-sidenav-menu-heading">Core</div>
+                            <a class="nav-link" href="index.html">
+                                <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                                Dashboard
+                            </a>
+                            <div class="sb-sidenav-menu-heading">Interface</div>
+                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLayouts" aria-expanded="false" aria-controls="collapseLayouts">
+                                <div class="sb-nav-link-icon"><i class="fas fa-columns"></i></div>
+                                Layouts
+                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                            </a>
+                            <div class="collapse" id="collapseLayouts" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
+                                <nav class="sb-sidenav-menu-nested nav">
+                                    <a class="nav-link" href="layout-static.html">Static Navigation</a>
+                                    <a class="nav-link" href="layout-sidenav-light.html">Light Sidenav</a>
+                                </nav>
+                            </div>
+                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapsePages" aria-expanded="false" aria-controls="collapsePages">
+                                <div class="sb-nav-link-icon"><i class="fas fa-book-open"></i></div>
+                                Pages
+                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                            </a>
+                            <div class="collapse" id="collapsePages" aria-labelledby="headingTwo" data-bs-parent="#sidenavAccordion">
+                                <nav class="sb-sidenav-menu-nested nav accordion" id="sidenavAccordionPages">
+                                    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#pagesCollapseAuth" aria-expanded="false" aria-controls="pagesCollapseAuth">
+                                        Authentication
+                                        <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                                    </a>
+                                    <div class="collapse" id="pagesCollapseAuth" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordionPages">
+                                        <nav class="sb-sidenav-menu-nested nav">
+                                            <a class="nav-link" href="login.html">Login</a>
+                                            <a class="nav-link" href="register.html">Register</a>
+                                            <a class="nav-link" href="password.html">Forgot Password</a>
+                                        </nav>
+                                    </div>
+                                    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#pagesCollapseError" aria-expanded="false" aria-controls="pagesCollapseError">
+                                        Error
+                                        <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                                    </a>
+                                    <div class="collapse" id="pagesCollapseError" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordionPages">
+                                        <nav class="sb-sidenav-menu-nested nav">
+                                            <a class="nav-link" href="401.html">401 Page</a>
+                                            <a class="nav-link" href="404.html">404 Page</a>
+                                            <a class="nav-link" href="500.html">500 Page</a>
+                                        </nav>
+                                    </div>
+                                </nav>
+                            </div>
+                            <div class="sb-sidenav-menu-heading">Addons</div>
+                            <a class="nav-link" href="charts.html">
+                                <div class="sb-nav-link-icon"><i class="fas fa-chart-area"></i></div>
+                                Charts
+                            </a>
+                            <a class="nav-link" href="tables.html">
+                                <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                                Tables
+                            </a>
+                        </div>
+                    </div>
+                    <div class="sb-sidenav-footer">
+                        <div class="small">Logged in as:</div>
+                        Start Bootstrap
+                    </div>
+                </nav>
+            </div>
+            <div id="layoutSidenav_content">
+                <main>
+                    <div class="container-fluid px-4">
+                        <h1 class="mt-4">Sidenav Light</h1>
+                        <ol class="breadcrumb mb-4">
+                            <li class="breadcrumb-item"><a href="index.html">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Sidenav Light</li>
+                        </ol>
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                This page is an example of using the light side navigation option. By appending the
+                                <code>.sb-sidenav-light</code>
+                                class to the
+                                <code>.sb-sidenav</code>
+                                class, the side navigation will take on a light color scheme. The
+                                <code>.sb-sidenav-dark</code>
+                                is also available for a darker option.
+                            </div>
+                        </div>
+                    </div>
+                </main>
+                <footer class="py-4 bg-light mt-auto">
+                    <div class="container-fluid px-4">
+                        <div class="d-flex align-items-center justify-content-between small">
+                            <div class="text-muted">Copyright &copy; Your Website 2023</div>
+                            <div>
+                                <a href="#">Privacy Policy</a>
+                                &middot;
+                                <a href="#">Terms &amp; Conditions</a>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+        <script src="resources/js/scripts.js"></script>
+    </body>
 </html>
